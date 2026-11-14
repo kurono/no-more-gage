@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<!--
+  Page structure for the NoMoreGage mortgage calculator.
+
+  Defines the loan and optimizer forms, payoff charts, and estimate readouts.
+  Loads the styles and deferred scripts in dependency order.
+
+  @author Ilya Tsivilskiy
+  @see #loanForm
+  @see #optimizerForm
+  @see #payoffVisuals
+  @see styles.css
+  @see src/app/main.js
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Estimate monthly mortgage payments and track the remaining balance on an existing loan.">
+  <meta name="theme-color" content="#f4f6f2">
+  <title>NoMoreGage</title>
+  <link id="siteIcon" rel="icon" href="assets/nomoregage-light.ico" sizes="16x16 24x24 32x32 48x48">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="panel-header">
+      <div class="heading-group">
+        <img id="brandMark" class="app-icon" src="assets/nomoregage-light.png" width="54" height="54" alt="">
+        <div>
+          <h1>NoMoreGage</h1>
+          <p class="lede" data-message="intro">Estimate your monthly payment or see what’s left on an existing mortgage.</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <label class="language-control">
+          <span data-message="language">Language</span>
+          <select id="language">
+            <option value="en" lang="en">English</option>
+            <option value="es" lang="es">Español</option>
+            <option value="tt" lang="tt">Татарча</option>
+            <option value="ru" lang="ru">Русский</option>
+          </select>
+        </label>
+        <label class="language-control">
+          <span data-message="theme">Theme</span>
+          <select id="theme">
+            <option value="light" data-message="lightTheme">Light</option>
+            <option value="dark" data-message="darkTheme">Dark</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <noscript><p class="notice">Enable JavaScript to use the mortgage calculator.</p></noscript>
+
+    <div class="workspace">
+      <form id="loanForm" class="panel card" autocomplete="off" novalidate>
+        <section aria-labelledby="loanTitle">
+          <div class="section-head">
+            <h2 id="loanTitle" data-message="loanDetails">Loan details</h2>
+            <button id="resetLoan" class="text-button" type="button" data-message="reset">Reset</button>
+          </div>
+          <div class="field-grid">
+            <div class="control full-width">
+              <label for="propertyPrice" data-message="propertyPrice">Property price</label>
+              <input id="propertyPrice" type="text" inputmode="decimal" value="375000" aria-describedby="propertyPriceError">
+              <p class="field-error" id="propertyPriceError" hidden></p>
+            </div>
+            <div class="control">
+              <label for="downPayment" data-message="downPayment">Down payment</label>
+              <input id="downPayment" type="text" inputmode="decimal" value="75000" aria-describedby="downPaymentError">
+              <p class="field-error" id="downPaymentError" hidden></p>
+            </div>
+            <div class="control">
+              <label for="principal" data-message="principal">Original loan principal</label>
+              <input id="principal" type="text" inputmode="decimal" value="300000" aria-describedby="principalError">
+              <p class="field-error" id="principalError" hidden></p>
+            </div>
+            <div class="control">
+              <label id="annualRateTitle" for="annualRate" data-message="annualRate">Annual interest rate</label>
+              <div class="input-unit">
+                <input id="annualRate" type="text" inputmode="decimal" value="6" aria-describedby="rateUnit annualRateError">
+                <span id="rateUnit">%</span>
+              </div>
+              <p class="field-error" id="annualRateError" hidden></p>
+              <input class="range-input" type="range" data-slider-for="annualRate" data-slider-label="annualRateTitle" aria-label="Adjust annual interest rate" min="0" max="20" step="0.1" value="6">
+              <div class="slider-scale" aria-hidden="true">
+                <span data-slider-start="annualRate"></span>
+                <span data-slider-end="annualRate"></span>
+              </div>
+            </div>
+            <div class="control term-control" role="group" aria-labelledby="termTitle">
+              <span id="termTitle" data-message="term">Original repayment term</span>
+              <div class="term-inputs">
+                <div class="input-unit">
+                  <input id="termYears" type="text" inputmode="numeric" value="30" data-label="termYears" aria-label="Repayment term in years" aria-describedby="termYearsError">
+                  <span aria-hidden="true" data-message="years">years</span>
+                </div>
+                <div class="input-unit">
+                  <input id="termMonths" type="text" inputmode="numeric" value="0" data-label="termMonths" aria-label="Additional months in repayment term" aria-describedby="termMonthsError">
+                  <span aria-hidden="true" data-message="months">months</span>
+                </div>
+              </div>
+              <p class="field-error" id="termYearsError" hidden></p>
+              <p class="field-error" id="termMonthsError" hidden></p>
+              <input class="range-input" type="range" data-slider-for="termYears" data-slider-label="termTitle" aria-label="Adjust original repayment term" min="1" max="600" step="1" value="360">
+              <div class="slider-scale" aria-hidden="true">
+                <span data-slider-start="termYears"></span>
+                <span data-slider-end="termYears"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="payment-settings" aria-labelledby="paymentTitle">
+          <div class="section-head">
+            <h2 id="paymentTitle" data-message="paymentSettings">Payment settings</h2>
+          </div>
+          <label class="toggle">
+            <input id="existingLoan" type="checkbox" role="switch" aria-controls="existingLoanFields">
+            <span data-message="existingLoan">Existing mortgage</span>
+          </label>
+          <div id="existingLoanFields" class="history-fields field-grid" hidden>
+            <div class="control">
+              <label for="totalPaid" data-message="totalPaid">Total amount paid</label>
+              <input id="totalPaid" type="text" inputmode="decimal" value="0" aria-describedby="historyHint totalPaidError">
+              <p class="field-error" id="totalPaidError" hidden></p>
+            </div>
+            <div class="control">
+              <label for="elapsedMonths" data-message="elapsedMonths">Months over which it was paid</label>
+              <input id="elapsedMonths" type="text" inputmode="numeric" value="0" aria-describedby="historyHint elapsedMonthsError">
+              <p class="field-error" id="elapsedMonthsError" hidden></p>
+            </div>
+            <p class="hint full-width" id="historyHint" data-message="historyHint">Enter what you paid toward principal and interest. The estimate spreads that amount evenly across the elapsed months.</p>
+            <div class="control full-width">
+              <label for="balanceOverride">
+                <span data-message="balanceOverride">Statement principal balance</span>
+                <span class="optional">(<span data-message="optional">optional</span>)</span>
+              </label>
+              <input id="balanceOverride" type="text" inputmode="decimal" aria-describedby="balanceHint balanceOverrideError">
+              <p class="field-error" id="balanceOverrideError" hidden></p>
+              <p class="hint" id="balanceHint" data-message="balanceHint">Enter the principal balance on your latest statement for an exact starting balance, especially if payments varied.</p>
+            </div>
+          </div>
+          <div class="control monthly-control">
+            <div class="field-head">
+              <label for="monthlyPayment" data-message="monthlyPayment">Monthly payment</label>
+              <button id="useCalculated" class="text-button" type="button" data-message="useCalculated" hidden>Use calculated payment</button>
+            </div>
+            <input id="monthlyPayment" type="text" inputmode="decimal" aria-describedby="paymentHint monthlyPaymentError">
+            <p class="field-error" id="monthlyPaymentError" hidden></p>
+            <p class="hint" id="paymentHint" data-message="paymentHint">Edit this amount to explore a different payoff timeline.</p>
+          </div>
+          <a class="estimate-link" href="#estimate" data-message="viewEstimate">View estimate</a>
+        </section>
+      </form>
+
+      <div class="results">
+        <section class="estimate card" aria-labelledby="estimate">
+          <h2 id="estimate" tabindex="-1" data-message="estimate">Your estimate</h2>
+          <dl class="estimate-values">
+            <div class="primary-metric">
+              <dt data-message="monthlyPrincipalInterest">Monthly principal &amp; interest</dt>
+              <dd id="paymentResult">—</dd>
+            </div>
+            <div class="secondary-metric">
+              <dt data-message="remainingBalance">Principal remaining</dt>
+              <dd id="balanceResult">—</dd>
+            </div>
+            <div class="secondary-metric">
+              <dt data-message="payoffTime">Time to pay off</dt>
+              <dd id="durationResult">—</dd>
+            </div>
+          </dl>
+          <p class="estimate-notice" id="estimateNotice" role="status" hidden></p>
+        </section>
+
+        <section class="visuals card" id="payoffVisuals" aria-labelledby="visualsTitle">
+          <div class="visuals-heading">
+            <h2 id="visualsTitle" data-message="visualsTitle">Payoff timeline</h2>
+            <p class="hint" data-message="visualsHint">Projected principal balance after each payment.</p>
+          </div>
+          <p class="hint chart-empty" id="chartEmpty" data-message="chartEmpty">The timeline appears when the estimate has a balance and a payoff term.</p>
+          <div class="chart-frame" id="chartFrame" hidden>
+            <canvas id="balanceChart" aria-hidden="true"></canvas>
+            <div class="chart-axis" aria-hidden="true">
+              <span id="chartStart"></span>
+              <span id="chartEnd"></span>
+            </div>
+          </div>
+          <div class="chart-explorer" id="chartExplorer" hidden>
+            <div class="chart-scrubber">
+              <label for="chartMonth" class="hint" data-message="chartExplore">Explore payoff timeline</label>
+              <input class="range-input" id="chartMonth" type="range" min="0" max="1000" value="0">
+            </div>
+            <div class="chart-readout">
+              <span id="chartMidTerm"></span>
+              <strong id="chartMidValue"></strong>
+            </div>
+          </div>
+          <p id="gaugeTitle" class="hint gauge-title">As of the selected month</p>
+          <div class="gauges" role="group" aria-labelledby="gaugeTitle">
+            <div class="gauge-card">
+              <span class="gauge-ring" id="progressGauge" aria-hidden="true"></span>
+              <div class="gauge-readout">
+                <span id="progressGaugeValue">—</span>
+                <span data-message="progressGauge">Original principal repaid</span>
+              </div>
+            </div>
+            <div class="gauge-card">
+              <span class="gauge-ring" id="interestGauge" aria-hidden="true"></span>
+              <div class="gauge-readout">
+                <span id="interestGaugeValue">—</span>
+                <span data-message="interestGauge">Interest share of remaining payments</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="optimizer card" aria-labelledby="optimizerTitle">
+          <h2 id="optimizerTitle" data-message="optimizeTitle">Optimize payment</h2>
+          <p id="optimizeHint" class="hint"></p>
+          <form id="optimizerForm" novalidate>
+            <div role="group" aria-labelledby="optimizerTitle">
+              <label class="objective">
+                <input id="minimizePayment" type="checkbox">
+                <span data-message="minimizePayment">Minimum monthly payment</span>
+              </label>
+              <label class="objective">
+                <input id="minimizeInterest" type="checkbox">
+                <span data-message="minimizeInterest">Minimum total interest paid</span>
+              </label>
+            </div>
+            <p id="optimizeCompromise" class="hint" data-message="optimizeCompromise" hidden>Gives equal weight to reducing the monthly payment and reducing interest.</p>
+            <div class="optimizer-actions">
+              <div class="field-grid optimizer-bounds">
+                <div class="control">
+                  <label id="optimizeMinTitle" for="optimizeMinMonths" data-message="optimizeMinMonths">Minimum payoff term (months)</label>
+                  <input id="optimizeMinMonths" type="text" inputmode="numeric" aria-describedby="optimizeMinTermHint optimizeMinMonthsError" autocomplete="off">
+                  <p id="optimizeMinMonthsError" class="field-error" hidden></p>
+                  <p id="optimizeMinTermHint" class="hint" data-message="optimizeMinTermHint">Leave blank to start at 1 month.</p>
+                  <input class="range-input" type="range" data-slider-for="optimizeMinMonths" data-slider-label="optimizeMinTitle" aria-label="Adjust minimum payoff term" min="1" max="600" step="1" value="1">
+                  <div class="slider-scale" aria-hidden="true">
+                    <span data-slider-start="optimizeMinMonths"></span>
+                    <span data-slider-end="optimizeMinMonths"></span>
+                  </div>
+                </div>
+                <div class="control">
+                  <label id="optimizeMaxTitle" for="optimizeMaxMonths" data-message="optimizeMaxMonths">Maximum payoff term (months)</label>
+                  <input id="optimizeMaxMonths" type="text" inputmode="numeric" aria-describedby="optimizeTermHint optimizeMaxMonthsError" autocomplete="off">
+                  <p id="optimizeMaxMonthsError" class="field-error" hidden></p>
+                  <p id="optimizeTermHint" class="hint" data-message="optimizeTermHint">Leave blank to use the remaining original term.</p>
+                  <input class="range-input" type="range" data-slider-for="optimizeMaxMonths" data-slider-label="optimizeMaxTitle" aria-label="Adjust maximum payoff term" min="1" max="600" step="1" value="360">
+                  <div class="slider-scale" aria-hidden="true">
+                    <span data-slider-start="optimizeMaxMonths"></span>
+                    <span data-slider-end="optimizeMaxMonths"></span>
+                  </div>
+                </div>
+              </div>
+              <button id="optimizeButton" class="primary-button" type="submit" aria-describedby="optimizeMinMonthsError optimizeMaxMonthsError" data-message="optimizeButton">Find optimum</button>
+            </div>
+          </form>
+          <p id="optimizationStatus" class="hint optimizer-status" role="status"></p>
+          <div id="optimizationResult" class="recommendation" hidden>
+            <h3 id="recommendationTitle" tabindex="-1" data-message="optimizedResult">Recommended payment and term</h3>
+            <dl class="recommendation-values">
+              <div>
+                <dt data-message="monthlyPayment">Monthly payment</dt>
+                <dd id="optimizedPayment"></dd>
+              </div>
+              <div>
+                <dt data-message="optimizedTerm">Payoff term</dt>
+                <dd id="optimizedTerm"></dd>
+              </div>
+              <div>
+                <dt data-message="interestRemaining">Remaining interest</dt>
+                <dd id="optimizedInterest"></dd>
+              </div>
+              <div id="optimizedOverpaymentRow">
+                <dt data-message="lifetimeOverpayment">Projected lifetime overpayment</dt>
+                <dd id="optimizedOverpayment"></dd>
+              </div>
+            </dl>
+            <div class="tradeoff">
+              <p class="hint tradeoff-y" data-message="interestRemaining">Remaining interest</p>
+              <canvas id="tradeoffChart" aria-hidden="true"></canvas>
+              <p class="hint tradeoff-x" data-message="monthlyPayment">Monthly payment</p>
+            </div>
+            <button id="useOptimized" class="text-button" type="button" data-message="useOptimized">Use this payment</button>
+          </div>
+        </section>
+
+        <section class="breakdown card" aria-labelledby="breakdownTitle">
+          <h2 id="breakdownTitle" data-message="paymentBreakdown">Remaining payment breakdown</h2>
+          <div class="allocation" aria-hidden="true">
+            <span id="principalShare"></span>
+          </div>
+          <dl class="breakdown-values">
+            <div>
+              <dt><i class="chip chip-principal" aria-hidden="true"></i><span data-message="principalLabel">Principal</span></dt>
+              <dd id="breakdownPrincipal">—</dd>
+            </div>
+            <div>
+              <dt><i class="chip chip-interest" aria-hidden="true"></i><span data-message="interestRemaining">Remaining interest</span></dt>
+              <dd id="interestResult">—</dd>
+            </div>
+            <div class="total">
+              <dt data-message="paymentsRemainingTotal">Total remaining payments</dt>
+              <dd id="totalResult">—</dd>
+            </div>
+            <div>
+              <dt data-message="lastPayment">Final payment</dt>
+              <dd id="lastPaymentResult">—</dd>
+            </div>
+          </dl>
+        </section>
+        <section class="overpayment card" aria-labelledby="overpaymentTitle">
+          <h2 id="overpaymentTitle" data-message="lifetimeOverpayment">Projected lifetime overpayment</h2>
+          <div class="overpayment-value">
+            <p id="overpaymentResult">—</p>
+            <p id="overpaymentPercent" hidden></p>
+          </div>
+          <p class="hint" data-message="lifetimeOverpaymentHint">All past and projected future payments minus the original principal.</p>
+          <p class="field-error" id="overpaymentNotice" role="status" hidden></p>
+        </section>
+        <p class="calculation-note" data-message="calculationNote">Estimates assume a fixed rate and monthly payments. Taxes, insurance, and fees are excluded.</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="src/core/bootstrap.js" defer></script>
+  <script src="src/math/mortgage.js" defer></script>
+  <script src="src/math/optimization.js" defer></script>
+  <script src="src/ui/language.js" defer></script>
+  <script src="src/ui/controls.js" defer></script>
+  <script src="src/ui/sliders.js" defer></script>
+  <script src="src/ui/visuals.js" defer></script>
+  <script src="src/app/main.js" defer></script>
+</body>
+</html>
